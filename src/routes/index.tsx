@@ -1,24 +1,68 @@
-import * as React from 'react';
+import { Card, Layout, Text } from '@ui-kitten/components';
+import React, { Component, } from 'react';
+import { inject, observer } from 'mobx-react';
 
-import Home from '../containers/home';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import HomeStore from '../../stores/home.store';
+import { ROUTES_NAMES } from '../../routes';
+import { ScrollView } from 'react-native-gesture-handler';
+import { StyleSheet } from 'react-native';
 
-const Stack = createStackNavigator();
+import Film from '../containers/film';
 
-function Routes() {
-    return (
-        <NavigationContainer>
-            <Stack.Navigator>
-                <Stack.Screen options={{
-                    headerTitle: 'First app',
-                    headerTintColor: '#ffffff',
-                    headerStyle: {
-                        backgroundColor: '#2b7cd7',
-                    }
-                }} name="Home" component={Home} />
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
+
+
+interface Props {
+  homeStore: HomeStore,
+  navigation: any
 }
-export default Routes;
+
+Stack.Navigator initialRouteName={ROUTES_NAMES.Home}
+
+
+@inject('homeStore')
+@observer
+export default class Home extends Component<Props> {
+
+  async componentDidMount() {
+    const { getFilms } = this.props.homeStore;
+    await getFilms();
+  }
+
+  render() {
+    const { films } = this.props.homeStore;
+
+    const navigateScreen = (id: number) => {
+      const { navigate } = this.props.navigation;
+      navigate(ROUTES_NAMES.Home, { id });
+    }
+
+    return (<Layout style={{ flex: 1, backgroundColor: 'black' }}>
+      <ScrollView>
+        {films.map((film, index) => (
+          <Card onPress={() => navigateScreen(film.id)} key={index}>
+            <Text style={styles.title}>{film.title}</Text>
+            <Text>Episode {film.episode_id.toString()}</Text>
+          </Card>
+        ))}
+      </ScrollView>
+    </Layout>);
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingTop: '10',
+    padding: 8,
+  },
+  title: {
+    fontSize: 20,
+  },
+  paragraph: {
+    margin: 24,
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+});
